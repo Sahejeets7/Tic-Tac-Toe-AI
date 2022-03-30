@@ -1,5 +1,5 @@
-const X_CLASS = 'x'
-const O_CLASS = 'circle'
+const X_CLASS = 'x' // Human Player
+const O_CLASS = 'circle'  // AI Player
 const WINNING_COMBINATIONS = [
   [0, 1, 2],
   [3, 4, 5],
@@ -14,7 +14,6 @@ const cellsList = document.querySelectorAll('[data-cell]')
 const board = document.getElementById('board-game')
 const messageDisplay = document.getElementById('gameMessage')
 const restartButton = document.getElementById('restartBtn')
-// const winningMessageTextElement = document.querySelector('[data-winning-message-text]')
 let playerXTurn
 
 beginGame()
@@ -23,7 +22,7 @@ restartButton.addEventListener('click', beginGame)
 
 function beginGame() {
   messageDisplay.classList.remove('show-overlay')
-  playerXTurn = true
+  playerXTurn = true  // human player - us
   cellsList.forEach(cell => {
     cell.classList.remove(X_CLASS)
     cell.classList.remove(O_CLASS)
@@ -34,21 +33,39 @@ function beginGame() {
   setHoverClass()
 }
 
+function isGameOver(currentClass) {
+  // check for WIN or DRAW
+  if (checkWin(currentClass)) {
+    endGame(true)
+    return true
+  } else if (checkDraw()) {
+    endGame(false)
+    return true
+  }
+  return false  
+}
+
+function getPlayerMovesTillNow() {  // change name
+  return [...cellsList].map((htmlCell) => {
+    if(htmlCell.classList.contains(X_CLASS)) return X_CLASS
+    if(htmlCell.classList.contains(O_CLASS)) return O_CLASS
+    return ''
+  })
+}
+
 function handleClick(e) {
   const clickedCell = e.target
   const currentClass = playerXTurn ? X_CLASS : O_CLASS
   // Make move
   placeMark(clickedCell, currentClass)
-  // check for WIN or DRAW
-  if (checkWin(currentClass)) {
-    endGame(true)
-  } else if (checkDraw()) {
-    endGame(false)
-  } else {
-    playerSwap()
-    // set board hover according to player turn
-    setHoverClass()
-  }
+  if (isGameOver(currentClass)) return
+
+  playerSwap()
+  const { cellIndex } = minimax(getPlayerMovesTillNow(), O_CLASS) // minimax AI opponent
+  placeMark(cellsList[cellIndex], O_CLASS)
+  if(isGameOver(O_CLASS)) return
+  playerSwap()
+  setHoverClass() // set board hover according to player turn
 }
 
 function endGame(isWin) {
